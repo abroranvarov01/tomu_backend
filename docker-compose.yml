@@ -52,6 +52,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
       - REDIS_HOST=redis
       - CHROMA_HOST=chroma
       - CHROMA_URL=http://chroma:8000
