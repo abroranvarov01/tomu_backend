@@ -1,0 +1,63 @@
+import { IConfig } from "../interfaces/interface";
+import * as dotenv from "dotenv";
+dotenv.config();
+
+export const config: IConfig = {
+  port: Number(process.env.PORT) || 3000,
+  database: process.env.DATABASE,
+  database_user: process.env.DATABASE_USER,
+  database_password: process.env.DATABASE_PASSWORD,
+  database_host: process.env.DATABASE_HOST,
+  database_port: Number(process.env.DATABASE_PORT) || 5432,
+  jwtSecretKey: process.env.JWT_SECRET_KEY,
+  jwtExpiredIn: process.env.JWT_EXPIRED_IN,
+  jwtCookieTime: Number(process.env.COOKIE_TIME),
+  jwtRefreshKey: process.env.JWT_REFRESH_SECRET_KEY,
+  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRATION,
+  databaseUrl: process.env.DB_URL,
+  token: process.env.TELEGRAM_BOT_TOKEN,
+  smsApiUrl: process.env.SMS_API_URL,
+  paymeMerchantKey: process.env.PAYME_KEY,
+  paymeMerchantId: process.env.PAYME_MERCHANT_ID,
+  paymeTestKey: process.env.PAYME_TEST_KEY,
+  openaiApiKey: process.env.OPENAI_API_KEY,
+  whisperModel: process.env.WHISPER_MODEL,
+  ttsModel: process.env.TTS_MODEL,
+  gptModel: process.env.GPT_MODEL,
+  translateApiKey: process.env.TRANSLATE_API_KEY,
+  chromaHost: process.env.CHROMA_HOST,
+  chromaPort: Number(process.env.CHROMA_PORT),
+  chromaUrl: process.env.CHROMA_URL,
+  chromaCollection: process.env.CHROMA_COLLECTION,
+  useRag: process.env.USE_RAG,
+  useRagStrict: process.env.USE_RAG_STRICT,
+  ragTopK: Number(process.env.RAG_TOP_K),
+  embedModel: process.env.EMBED_MODEL,
+  strictNoEcho: Number(process.env.STRICT_NO_ECHO),
+  detSim: Number(process.env.DET_SIM),
+  echoOverlap: Number(process.env.ECHO_OVERLAP),
+  maxTokens: Number(process.env.MAX_TOKENS),
+  temperature: Number(process.env.TEMPERATURE),
+  responseClamp: Number(process.env.RESPONSE_CLAMP),
+  analyzeUser: Number(process.env.ANALYZE_USER),
+  allowedVocabPath: process.env.ALLOWED_VOCAB_PATH,
+  embedBatch: Number(process.env.EMBED_BATCH),
+  debugLog: Number(process.env.DEBUG_LOG),
+  retrieveMaxLesson: Number(process.env.RETRIEVE_MAX_LESSON),
+  // Logger configuration
+  logLevel: process.env.LOG_LEVEL || 'warn', // 'error', 'warn', 'log', 'debug'
+  isDevelopment: process.env.NODE_ENV === 'development',
+  // Firebase configuration
+  firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
+  firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  // Firebase App IDs (for frontend/mobile apps)
+  firebaseWebAppId: process.env.FIREBASE_WEB_APP_ID || '1:1062737653345:web:2945672ae4f851a8f60420',
+  firebaseAndroidAppId: process.env.FIREBASE_ANDROID_APP_ID || '1:1062737653345:android:f8dc6c570f85d476f60420',
+  firebaseIosAppId: process.env.FIREBASE_IOS_APP_ID || '1:1062737653345:ios:3abcf8fb98147f10f60420',
+  firebaseMacosAppId: process.env.FIREBASE_MACOS_APP_ID || '1:1062737653345:ios:3abcf8fb98147f10f60420',
+  firebaseWindowsAppId: process.env.FIREBASE_WINDOWS_APP_ID || '1:1062737653345:web:53e4274667dbf524f60420',
+  // Test OTP configuration for app store review
+  testPhone: process.env.TEST_PHONE,
+  testOtp: process.env.TEST_OTP,
+};
