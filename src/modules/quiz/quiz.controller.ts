@@ -84,13 +84,22 @@ export class QuizController {
 
   // ==================== STUDENT API ====================
 
+  @ApiOperation({ summary: "Barcha testlarni Course > Block > Lesson > Quiz formatida olish" })
+  @Auth(RoleEnum.DIRECTOR, RoleEnum.ADMIN, RoleEnum.STUDENT, RoleEnum.TEACHER)
+  @Get("grouped")
+  async getGroupedQuizzes(): Promise<ResData<any>> {
+    return await this.quizService.getGroupedQuizzes();
+  }
+
   @ApiOperation({ summary: "Dars ID bo'yicha testni olish (Student - javoblar yashirin)" })
   @Auth(RoleEnum.DIRECTOR, RoleEnum.ADMIN, RoleEnum.STUDENT, RoleEnum.TEACHER)
   @Get("by-lesson/:lessonId")
   async findByLessonId(
     @Param("lessonId", ParseIntPipe) lessonId: ID,
+    @Req() req: RequestWithUser,
   ): Promise<ResData<any>> {
-    return await this.quizService.findByLessonIdForStudent(lessonId);
+    const userId = req.user["id"];
+    return await this.quizService.findByLessonIdForStudent(lessonId, userId);
   }
 
   @ApiOperation({ summary: "Testga javob berish" })

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger, BadRequestException, ForbiddenException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { IQuizService } from "./interfaces/quiz.service";
@@ -6,6 +6,8 @@ import { IQuizRepository } from "./interfaces/quiz.repository";
 import { Quiz } from "./entities/quiz.entity";
 import { QuizQuestion } from "./entities/quiz-question.entity";
 import { QuizAttempt } from "./entities/quiz-attempt.entity";
+import { ILessonRepository } from "../lesson/interfaces/lesson.repository";
+import { ILessonProgressRepository } from "../lesson-progress/interfaces/lesson-progress.repository";
 import { CreateQuizDto } from "./dto/create-quiz.dto";
 import { UpdateQuizDto } from "./dto/update-quiz.dto";
 import { SubmitQuizDto } from "./dto/submit-quiz.dto";
@@ -24,6 +26,12 @@ export class QuizService implements IQuizService {
     @Inject("IQuizRepository")
     private readonly quizRepository: IQuizRepository,
 
+    @Inject("ILessonRepository")
+    private readonly lessonRepository: ILessonRepository,
+
+    @Inject("ILessonProgressRepository")
+    private readonly lessonProgressRepository: ILessonProgressRepository,
+
     @InjectRepository(QuizQuestion)
     private readonly questionRepo: Repository<QuizQuestion>,
 
@@ -40,6 +48,11 @@ export class QuizService implements IQuizService {
     const existing = await this.quizRepository.findByLessonId(dto.lessonId);
     if (existing) {
       throw new QuizAlreadyExistsForLessonException();
+    }
+
+    const lesson = await this.lessonRepository.findById(dto.lessonId);
+    if (!lesson) {
+      throw new BadRequestException("Bunday dars mavjud emas");
     }
 
     const quiz = new Quiz();
@@ -96,8 +109,17 @@ export class QuizService implements IQuizService {
 
   /**
    * Dars ID bo'yicha testni olish (student uchun — to'g'ri javoblar yashiriladi).
+   * Dars videosi ko'rilmagan bo'lsa, testga ruxsat berilmaydi.
    */
-  async findByLessonIdForStudent(lessonId: ID): Promise<ResData<any>> {
+  async findByLessonIdForStudent(lessonId: ID, userId: ID): Promise<ResData<any>> {
+    // Dars videosi ko'rilganligini tekshirish
+    const progress = await this.lessonProgressRepository.findOneByUserAndLesson(userId, lessonId);
+    if (!progress || !progress.isWatched) {
+      throw new ForbiddenException(
+        "Video darsni to'liq ko'rmasdan turib testni ishlash mumkin emas",
+      );
+    }
+
     const quiz = await this.quizRepository.findByLessonId(lessonId);
     if (!quiz) {
       throw new QuizNotFoundException();
@@ -308,5 +330,82 @@ export class QuizService implements IQuizService {
   async hasQuizForLesson(lessonId: ID): Promise<boolean> {
     const quiz = await this.quizRepository.findByLessonId(lessonId);
     return !!quiz;
+  }
+
+  /**
+   * Barcha testlarni Course > Block > Lesson > Quiz formatida guruhlash.
+   */
+  async getGroupedQuizzes(): Promise<ResData<any>> {
+    const quizzes = await this.quizRepository.findAllWithRelations();
+
+    // Course bo'yicha guruhlash
+    const courseMap = new Map<number, any>();
+
+    for (const quiz of quizzes) {
+      const lesson = quiz.lesson;
+      if (!lesson) continue;
+
+      const block = (lesson as any).block;
+      const course = (lesson as any).course;
+      if (!course || !block) continue;
+
+      // Course yaratish yoki topish
+      if (!courseMap.has(course.id)) {
+        courseMap.set(course.id, {
+          courseId: course.id,
+          courseTitle: course.title || null,
+          blocks: new Map<number, any>(),
+        });
+      }
+      const courseEntry = courseMap.get(course.id);
+
+      // Block yaratish yoki topish
+      if (!courseEntry.blocks.has(block.id)) {
+        courseEntry.blocks.set(block.id, {
+          blockId: block.id,
+          blockTitle: block.title || null,
+          blockOrder: block.order || null,
+          lessons: new Map<number, any>(),
+        });
+      }
+      const blockEntry = courseEntry.blocks.get(block.id);
+
+      // Lesson yaratish yoki topish
+      if (!blockEntry.lessons.has(lesson.id)) {
+        blockEntry.lessons.set(lesson.id, {
+          lessonId: lesson.id,
+          lessonTitle: lesson.title || null,
+          lessonOrder: lesson.order || null,
+          quizzes: [],
+        });
+      }
+      const lessonEntry = blockEntry.lessons.get(lesson.id);
+
+      // Quiz qo'shish
+      lessonEntry.quizzes.push({
+        quizId: quiz.id,
+        quizTitle: quiz.title,
+        description: quiz.description,
+        questionCount: quiz.questions?.length || 0,
+        createdAt: quiz.createdAt,
+      });
+    }
+
+    // Map larni array ga aylantirish
+    const result = Array.from(courseMap.values()).map((course) => ({
+      ...course,
+      blocks: Array.from(course.blocks.values())
+        .map((block: any) => ({
+          ...block,
+          lessons: Array.from(block.lessons.values())
+            .map((lesson: any) => ({
+              ...lesson,
+            }))
+            .sort((a: any, b: any) => (a.lessonOrder || 0) - (b.lessonOrder || 0)),
+        }))
+        .sort((a: any, b: any) => (a.blockOrder || 0) - (b.blockOrder || 0)),
+    }));
+
+    return new ResData("Testlar guruhlangan holda", 200, result);
   }
 }

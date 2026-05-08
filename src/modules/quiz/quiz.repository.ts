@@ -24,6 +24,13 @@ export class QuizRepository implements IQuizRepository {
     });
   }
 
+  async findAllWithRelations(): Promise<Quiz[]> {
+    return await this.quizRepo.find({
+      relations: ["lesson", "lesson.block", "lesson.course", "questions"],
+      order: { createdAt: "DESC" },
+    });
+  }
+
   async findById(id: ID): Promise<Quiz | null> {
     return await this.quizRepo.findOne({
       where: { id },

@@ -7,11 +7,14 @@ import { QuizController } from "./quiz.controller";
 import { QuizService } from "./quiz.service";
 import { QuizRepository } from "./quiz.repository";
 import { SharedModule } from "../shared/shared.module";
-
+import { LessonModule } from "../lesson/lesson.module";
+import { LessonProgressModule } from "../lesson-progress/lesson-progress.module";
 @Module({
   imports: [
     TypeOrmModule.forFeature([Quiz, QuizQuestion, QuizAttempt]),
     SharedModule,
+    LessonModule,
+    LessonProgressModule,
   ],
   controllers: [QuizController],
   providers: [

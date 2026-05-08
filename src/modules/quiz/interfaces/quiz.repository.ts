@@ -8,4 +8,5 @@ export interface IQuizRepository {
   findByLessonId(lessonId: ID): Promise<Quiz | null>;
   update(entity: Quiz): Promise<Quiz>;
   delete(entity: Quiz): Promise<Quiz>;
+  findAllWithRelations(): Promise<Quiz[]>;
 }

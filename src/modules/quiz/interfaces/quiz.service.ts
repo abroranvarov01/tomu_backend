@@ -11,6 +11,8 @@ export interface IQuizService {
   findAll(): Promise<ResData<Quiz[]>>;
   findOneById(id: ID): Promise<ResData<Quiz>>;
   findByLessonId(lessonId: ID): Promise<ResData<Quiz>>;
+  findByLessonIdForStudent(lessonId: ID, userId: ID): Promise<ResData<any>>;
+  getGroupedQuizzes(): Promise<ResData<any>>;
   update(id: ID, dto: UpdateQuizDto): Promise<ResData<Quiz>>;
   delete(id: ID): Promise<ResData<Quiz>>;
   submitQuiz(quizId: ID, userId: ID, dto: SubmitQuizDto): Promise<ResData<QuizAttempt>>;
