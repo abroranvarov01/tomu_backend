@@ -45,6 +45,14 @@ export class QuizRepository implements IQuizRepository {
     });
   }
 
+  async findBySectionId(sectionId: ID): Promise<Quiz[]> {
+    return await this.quizRepo.find({
+      where: { sectionId },
+      relations: ["questions"],
+      order: { createdAt: "ASC" },
+    });
+  }
+
   async update(entity: Quiz): Promise<Quiz> {
     return await this.quizRepo.save(entity);
   }

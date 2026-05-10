@@ -12,12 +12,23 @@ export class Quiz extends BaseEntity {
   @Column({ type: "text", nullable: true })
   description: string;
 
-  @Column({ type: "int", name: "lesson_id" })
-  lessonId: number;
+  /**
+   * Darsga bog'liq test (ixtiyoriy).
+   * lessonId yoki sectionId dan biri mavjud bo'lishi kerak.
+   */
+  @Column({ type: "int", name: "lesson_id", nullable: true })
+  lessonId: number | null;
 
-  @ManyToOne(() => Lesson, { onDelete: "CASCADE" })
+  @ManyToOne(() => Lesson, { onDelete: "CASCADE", nullable: true })
   @JoinColumn({ name: "lesson_id" })
-  lesson: Lesson;
+  lesson: Lesson | null;
+
+  /**
+   * Bo'lim (block/section) ga bog'liq test (ixtiyoriy).
+   * Lesson bo'lmagan holda section uchun test yaratish mumkin.
+   */
+  @Column({ type: "int", name: "section_id", nullable: true })
+  sectionId: number | null;
 
   @OneToMany(() => QuizQuestion, (question) => question.quiz, {
     cascade: true,

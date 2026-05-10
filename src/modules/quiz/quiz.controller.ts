@@ -102,6 +102,17 @@ export class QuizController {
     return await this.quizService.findByLessonIdForStudent(lessonId, userId);
   }
 
+  @ApiOperation({ summary: "Bo'lim (Section) ID bo'yicha barcha testlarni olish (Student - javoblar yashirin)" })
+  @Auth(RoleEnum.DIRECTOR, RoleEnum.ADMIN, RoleEnum.STUDENT, RoleEnum.TEACHER)
+  @Get("by-section/:sectionId")
+  async findBySectionId(
+    @Param("sectionId", ParseIntPipe) sectionId: ID,
+    @Req() req: RequestWithUser,
+  ): Promise<ResData<any>> {
+    const userId = req.user["id"];
+    return await this.quizService.findBySectionIdForStudent(sectionId, userId);
+  }
+
   @ApiOperation({ summary: "Testga javob berish" })
   @Auth(RoleEnum.DIRECTOR, RoleEnum.ADMIN, RoleEnum.STUDENT, RoleEnum.TEACHER)
   @Post(":quizId/submit")

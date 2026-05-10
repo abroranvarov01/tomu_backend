@@ -48,9 +48,28 @@ export class CreateQuizDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: "Dars ID'si", example: 1 })
+  /**
+   * Darsga bog'liq test uchun lessonId bering.
+   * Bo'limga bog'liq test uchun sectionId bering.
+   * Ikkalasidan kamida biri bo'lishi shart.
+   */
+  @ApiProperty({
+    description: "Dars ID'si (lessonId yoki sectionId dan kamida biri bo'lishi shart)",
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
   @IsInt()
-  lessonId: number;
+  lessonId?: number;
+
+  @ApiProperty({
+    description: "Bo'lim (Section/Block) ID'si (lessonId yoki sectionId dan kamida biri bo'lishi shart)",
+    example: 2,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  sectionId?: number;
 
   @ApiProperty({
     description: "Savollar ro'yxati",

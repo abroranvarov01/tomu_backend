@@ -12,6 +12,7 @@ export interface IQuizService {
   findOneById(id: ID): Promise<ResData<Quiz>>;
   findByLessonId(lessonId: ID): Promise<ResData<Quiz>>;
   findByLessonIdForStudent(lessonId: ID, userId: ID): Promise<ResData<any>>;
+  findBySectionIdForStudent(sectionId: ID, userId: ID): Promise<ResData<any>>;
   getGroupedQuizzes(): Promise<ResData<any>>;
   update(id: ID, dto: UpdateQuizDto): Promise<ResData<Quiz>>;
   delete(id: ID): Promise<ResData<Quiz>>;

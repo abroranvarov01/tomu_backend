@@ -41,24 +41,33 @@ export class QuizService implements IQuizService {
 
   /**
    * Yangi test yaratish (Admin).
+   * lessonId yoki sectionId dan kamida biri bo'lishi kerak.
    * Har bir dars uchun faqat bitta test bo'lishi mumkin.
    */
   async create(dto: CreateQuizDto): Promise<ResData<Quiz>> {
-    // Dars uchun test mavjudligini tekshirish
-    const existing = await this.quizRepository.findByLessonId(dto.lessonId);
-    if (existing) {
-      throw new QuizAlreadyExistsForLessonException();
-    }
-
-    const lesson = await this.lessonRepository.findById(dto.lessonId);
-    if (!lesson) {
-      throw new BadRequestException("Bunday dars mavjud emas");
+    // Kamida biri bo'lishi shart
+    if (!dto.lessonId && !dto.sectionId) {
+      throw new BadRequestException("lessonId yoki sectionId dan kamida biri bo'lishi shart");
     }
 
     const quiz = new Quiz();
     quiz.title = dto.title;
     quiz.description = dto.description || null;
-    quiz.lessonId = dto.lessonId;
+    quiz.lessonId = dto.lessonId ?? null;
+    quiz.sectionId = dto.sectionId ?? null;
+
+    // Dars ID berilgan bo'lsa, dars mavjudligini tekshirish
+    if (dto.lessonId) {
+      const existing = await this.quizRepository.findByLessonId(dto.lessonId);
+      if (existing) {
+        throw new QuizAlreadyExistsForLessonException();
+      }
+
+      const lesson = await this.lessonRepository.findById(dto.lessonId);
+      if (!lesson) {
+        throw new BadRequestException("Bunday dars mavjud emas");
+      }
+    }
 
     // Savollarni yaratish
     quiz.questions = dto.questions.map((q) => {
@@ -71,7 +80,9 @@ export class QuizService implements IQuizService {
     });
 
     const savedQuiz = await this.quizRepository.create(quiz);
-    this.logger.log(`Test yaratildi: ID=${savedQuiz.id}, lessonId=${dto.lessonId}`);
+    this.logger.log(
+      `Test yaratildi: ID=${savedQuiz.id}, lessonId=${dto.lessonId ?? "null"}, sectionId=${dto.sectionId ?? "null"}`,
+    );
 
     return new ResData<Quiz>("Test muvaffaqiyatli yaratildi", 201, savedQuiz);
   }
@@ -97,7 +108,6 @@ export class QuizService implements IQuizService {
 
   /**
    * Dars ID bo'yicha testni olish.
-   * Savollardan to'g'ri javob indeksi olib tashlanadi (student uchun).
    */
   async findByLessonId(lessonId: ID): Promise<ResData<Quiz>> {
     const quiz = await this.quizRepository.findByLessonId(lessonId);
@@ -144,6 +154,43 @@ export class QuizService implements IQuizService {
     };
 
     return new ResData("ok", 200, sanitizedQuiz);
+  }
+
+  /**
+   * Section (bo'lim) ID bo'yicha barcha testlarni olish (student uchun).
+   * To'g'ri javoblar yashiriladi.
+   * Bu funksiya student bo'limga tegishli barcha testlarni ketma-ket yechishi uchun.
+   */
+  async findBySectionIdForStudent(sectionId: ID, userId: ID): Promise<ResData<any>> {
+    const quizzes = await this.quizRepository.findBySectionId(sectionId);
+
+    if (!quizzes || quizzes.length === 0) {
+      throw new QuizNotFoundException();
+    }
+
+    // Har bir testdan to'g'ri javob indeksini yashirish
+    const sanitizedQuizzes = quizzes.map((quiz) => ({
+      id: quiz.id,
+      title: quiz.title,
+      description: quiz.description,
+      sectionId: quiz.sectionId,
+      questions: quiz.questions
+        .sort((a, b) => a.order - b.order)
+        .map((q) => ({
+          id: q.id,
+          questionText: q.questionText,
+          order: q.order,
+          options: q.options,
+          // correctOptionIndex yashirildi
+        })),
+      createdAt: quiz.createdAt,
+    }));
+
+    return new ResData("ok", 200, {
+      sectionId,
+      totalQuizzes: sanitizedQuizzes.length,
+      quizzes: sanitizedQuizzes,
+    });
   }
 
   /**

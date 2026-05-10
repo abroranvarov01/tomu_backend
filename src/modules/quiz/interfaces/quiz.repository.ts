@@ -6,6 +6,7 @@ export interface IQuizRepository {
   findAll(): Promise<Quiz[]>;
   findById(id: ID): Promise<Quiz | null>;
   findByLessonId(lessonId: ID): Promise<Quiz | null>;
+  findBySectionId(sectionId: ID): Promise<Quiz[]>;
   update(entity: Quiz): Promise<Quiz>;
   delete(entity: Quiz): Promise<Quiz>;
   findAllWithRelations(): Promise<Quiz[]>;
